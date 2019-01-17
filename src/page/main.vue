@@ -11,26 +11,25 @@
             .nav-keyword-search-container
               .nav-keyword-input-container
                 input.nav-keyword-input(v-model="input.inputKeyword" placeholder="Add Keyword" v-on:keyup.enter="triggerAddKeyword")
-                i.nav-keyword-search.material-icons.disable-select search
-              .nav-keyword-disable-container
-                .nav-keyword-disable-title.disable-select Disable
+                i.nav-keyword-search.material-icons search
+              .nav-keyword-disable-container.disable-select
+                .nav-keyword-disable-title Disable
                 .nav-keyword-disable-button-container
-                  .nav-keyword-disable-button.disable-select(:class="{ button_selected: filterObj.disableState }" @click='toggleButton("query", true)') On
+                  .nav-keyword-disable-button(:class="{ button_selected: filterObj.disableState }" @click='toggleButton("query", true)') On
                   .vertical-line
-                  .nav-keyword-disable-button.disable-select(:class="{ button_selected: !filterObj.disableState }" @click='toggleButton("query", false)') Off
+                  .nav-keyword-disable-button(:class="{ button_selected: !filterObj.disableState }" @click='toggleButton("query", false)') Off
             .nav-query-exp-wrapper
-              .nav-query-exp-container
-                .nav-query-exp-keyword.disable-select Keyword
-                .nav-query-exp-radio.disable-select Must
-                .nav-query-exp-radio.disable-select Not
-                .nav-query-exp-radio.disable-select Maybe
+              .nav-query-exp-container.disable-select
+                .nav-query-exp-keyword Keyword
+                .nav-query-exp-radio Must
+                .nav-query-exp-radio Not
+                .nav-query-exp-radio Maybe
             .nav-query-list-container
               query_component(v-for="queryComponent in component.queryComponentList" v-bind="queryComponent"
               v-on:removeKeyword="removeKeyword" v-on:selectQueryRadio="selectQueryRadio")
         .accordion-bar.disable-select(@click='expand("expandOption")') Option
         transition(name="fade")
           .margin-top.nav-option-wrapper(v-if="expandOption")
-            .nav-option-container.disable-select
             .nav-option-container.disable-select
               .nav-option-title Scatter
               .nav-option-button-wrapper
@@ -45,14 +44,25 @@
       .vertical-line
       .display-container
         .display-header
-          .display-header-category.disable-select category
-          .display-header-threshold-group.disable-select group
-          .display-header-count.disable-select count
-          .display-header-graph-bar
-            svg(width="100%" height="100%").svg-display-header
-              line(x1="24px" y1="50%" x2="798px" y2="50%" stroke-width="1" stroke="#727272")
-              line(x1="24px" y1="25%" x2="24px" y2="75%" stroke-width="1" stroke="#727272")
-              line(x1="798px" y1="25%" x2="798px" y2="75%" stroke-width="1" stroke="#727272")
+          .display-header-category-container.disable-select
+            .display-header-category category
+            .display-header-category-info
+              .display-header-posts Number of Posts
+              .display-header-threshold Threshold Count
+              .display-header-posts Number of Posts
+          .display-header-graph-bar.disable-select
+            .display-header-graph-header Timeline
+            .display-header-graph-body
+              svg(width="100%" height="100%").svg-header
+                line(x1="0" y1="50%" x2="100%" y2="50%" stroke-width="4" stroke="#0078d7")
+                rect(:x="controller.minCx - controller.width / 2" y="calc(50% - 15px)" rx="5" ry="5" :width="controller.width" :height="controller.height" fill="#0078d7" stroke="#0036a4" stroke-width="2")
+                line(:x1="controller.minCx - 4" y1="50%" :x2="controller.minCx + 4" y2="50%" stroke-width="2.5" stroke="#0036a4")
+                line(:x1="controller.minCx - 4" y1="calc(50% + 4.5px)" :x2="controller.minCx + 4" y2="calc(50% + 4.5px)" stroke-width="2.5" stroke="#0036a4")
+                line(:x1="controller.minCx - 4" y1="calc(50% - 4.5px)" :x2="controller.minCx + 4" y2="calc(50% - 4.5px)" stroke-width="2.5" stroke="#0036a4")
+                rect(:x="controller.maxCx - controller.width / 2" y="calc(50% - 15px)" rx="5" ry="5" :width="controller.width" :height="controller.height" fill="#0078d7" stroke="#0036a4" stroke-width="2")
+                line(:x1="controller.maxCx - 4" y1="50%" :x2="controller.maxCx + 4" y2="50%" stroke-width="2.5" stroke="#0036a4")
+                line(:x1="controller.maxCx - 4" y1="calc(50% + 4.5px)" :x2="controller.maxCx + 4" y2="calc(50% + 4.5px)" stroke-width="2.5" stroke="#0036a4")
+                line(:x1="controller.maxCx - 4" y1="calc(50% - 4.5px)" :x2="controller.maxCx + 4" y2="calc(50% - 4.5px)" stroke-width="2.5" stroke="#0036a4")
         .display-content-list-container
           display_component(v-for="displayComponent in component.displayComponentList" v-bind="displayComponent")
       .vertical-line
@@ -61,8 +71,6 @@
         .display-category-info-container.b
         .display-keyword-info-list-container.b
         .display-related-post-list-container.b
-
-
 </template>
 
 <script>
@@ -75,12 +83,10 @@ import CategoryComponent from '../components/category.component';
 import QueryComponent from '../components/query.component';
 import DisplayComponent from '../components/display.component';
 
-
 Vue.component(CategoryComponent.name, CategoryComponent);
 Vue.component(QueryComponent.name, QueryComponent);
 Vue.component(DisplayComponent.name, DisplayComponent);
 
-const MINIMUM = 30;
 const KEYWORD_MUST = 1;
 const KEYWORD_NOT = 2;
 const THRESHOLD = 1000;
@@ -89,6 +95,15 @@ export default {
   name: 'MainPage',
   data() {
     return {
+
+      // 1에서 시작 ~ 898에서 끝
+
+      controller: {
+        width: 12,
+        height: 30,
+        minCx: 7,
+        maxCx: 892
+      },
       expandCategory: false,
       expandOption: false,
       expandQuery: false,
@@ -104,7 +119,6 @@ export default {
       filterObj: {
         inputKeywords: {},
         disableState: false,
-        equalizeState: false,
         scatterState: true
       },
       nodeOverList: [],
@@ -130,7 +144,7 @@ export default {
       });
       _.forEach(under, (ele) => {
         ele['x'] = 15 + ele['dayIndex'] * 2.5;
-        ele['y'] = Math.floor(75 * Math.random()) + 100;
+        ele['y'] = Math.floor(75 * Math.random()) + 95;
         ele['r'] = Math.floor(2 * Math.random()) + 1;
         ele['selected'] = true;
       });
@@ -140,7 +154,7 @@ export default {
       });
       _.forEach(over, (ele) => {
         ele['x'] = 15 + ele['dayIndex'] * 2.5;
-        ele['y'] = Math.floor(73 * Math.random()) + 5;
+        ele['y'] = Math.floor(70 * Math.random()) + 10;
         ele['r'] = Math.floor(4 * Math.random()) + 3;
         ele['selected'] = true;
       });
@@ -158,10 +172,9 @@ export default {
         count_under: that.nodeUnderList[i - 1].length,
         visibility: false,
         content_disable: that.filterObj.disableState,
-        scatter_state: true
+        scatter_state: that.filterObj.scatterState
       });
     }
-    console.log(that.component.categoryComponentList);
   },
   methods: {
     async expand(obj) {
@@ -180,7 +193,6 @@ export default {
       selected.category_state ?
         that.component.displayComponentList[categoryIdx - 1].visibility = true :
         that.component.displayComponentList[categoryIdx - 1].visibility = false;
-      // 누른 순서대로 나와야 하는데 그게 안됨
     },
     toggleButton(obj, state) {
       let that = this;
@@ -191,18 +203,15 @@ export default {
             ele.content_disable = that.filterObj.disableState;
           });
         }
-      } else if (obj === 'equalize') {
-        if (state !== that.filterObj.equalizeState) that.filterObj.equalizeState = !that.filterObj.equalizeState;
-      } else if (obj === 'scatter') {
+      }
+      else if (obj === 'scatter') {
         if (state !== that.filterObj.scatterState) {
           that.filterObj.scatterState = !that.filterObj.scatterState;
-          console.log(that.filterObj.scatterState);
           _.forEach(that.component.displayComponentList, (ele) => {
             ele.scatter_state = that.filterObj.scatterState;
           });
         }
       }
-      console.log(that.filterObj);
     },
     selectQueryRadio(title, radioIndex) {
       const that = this;
@@ -211,7 +220,6 @@ export default {
       });
       selected.radio_selected = radioIndex;
       that.filterObj.inputKeywords[title] = radioIndex;
-      console.log(that.filterObj.inputKeywords);
       that.updateNodeByQuery();
     },
     removeKeyword(title) {
@@ -221,7 +229,6 @@ export default {
         return ele.keyword_title !== title;
       });
       delete that.filterObj.inputKeywords[title];
-      console.log(that.filterObj.inputKeywords);
       that.updateNodeByQuery();
     },
     triggerAddKeyword: _.debounce(function () {
@@ -231,19 +238,18 @@ export default {
       const that = this;
       let trimmed = that.input.inputKeyword.trim();
       that.input.inputKeyword = '';
-      if (trimmed.length !== 0) {
+      if (trimmed.length !== 0 && !Object.keys(that.filterObj.inputKeywords)
+        .includes(trimmed)) {
         that.component.queryComponentList.push({
           keyword_title: trimmed,
           radio_selected: KEYWORD_MUST
         });
         that.filterObj.inputKeywords[trimmed] = KEYWORD_MUST;
       }
-      console.log(that.filterObj.inputKeywords);
       that.updateNodeByQuery();
     },
     updateNodeByQuery() {
       let that = this;
-      console.log(that.filterObj.inputKeywords);
       for (let i = 1; i <= 17; i++) {
         let nodeList = that.nodeOverList[i - 1];
         let filtered = that.nodeOverList[i - 1];
@@ -464,30 +470,50 @@ export default {
     .display-container
       width: calc(100% - 312px - 450px)
       height: 100%
+      padding: 0 24px
       overflow-y: scroll
       .display-header
         width: 100%
-        height: 60px
+        height: 144px
+        padding: 30px 0
         display: flex
-        border-bottom: 1px solid #dedede
-        .display-header-category
-          width: 120px
+        .display-header-category-container
+          width: 210px
           height: 100%
-          line-height: 60px
-          cursor: pointer
-        .display-header-threshold-group
-          width: 90px
-          height: 100%
-          line-height: 60px
-          cursor: pointer
-        .display-header-count
-          width: 90px
-          height: 100%
-          line-height: 60px
-          cursor: pointer
+          display: flex
+          .display-header-category
+            width: 66px
+            height: 100%
+            line-height: 81px
+            font-size: 10px
+            border: 0.3px solid #757575
+          .display-header-category-info
+            flex: 1
+            padding-left: 12px
+            .display-header-posts
+              width: 100%
+              height: 24px
+              text-align: left
+              line-height: 24px
+              font-size: 10px
+            .display-header-threshold
+              width: 100%
+              height: 36px
+              text-align: left
+              line-height: 36px
+              font-size: 14px
         .display-header-graph-bar
           flex: 1
           height: 100%
+          .display-header-graph-header
+            width: 100%
+            height: 30px
+            line-height: 15px
+            font-size: 21px
+            text-align: left
+          .display-header-graph-body
+            width: 100%
+            height: calc(100% - 30px)
       .display-content-list-container
         width: 100%
         height: auto

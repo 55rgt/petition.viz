@@ -1,7 +1,7 @@
 <template lang="pug">
-  .display-content-container(v-if="visibility")
-    .display-content-category.disable-select {{ content_category }}
-    .display-content-count-wrapper
+  .display-content-container(v-if="visibility" :style="{border: `0.5px solid rgba(${parseInt(content_color.substring(1,3),16)},${parseInt(content_color.substring(3,5),16)},${parseInt(content_color.substring(5,7),16)}, 0.2)`}")
+    .display-content-category.disable-select(:style="{background: `rgba(${parseInt(content_color.substring(1,3),16)},${parseInt(content_color.substring(3,5),16)},${parseInt(content_color.substring(5,7),16)}, 0.2)`}") {{ content_category }}
+    .display-content-count-wrapper(:style="{borderRight: `1px solid rgba(${parseInt(content_color.substring(1,3),16)},${parseInt(content_color.substring(3,5),16)},${parseInt(content_color.substring(5,7),16)}, 0.2)`}")
       .display-content-count-container
         .display-content-count {{ count_over }}
         .display-content-threshold.disable-select 1K
@@ -13,13 +13,12 @@
         template(v-for="node in node_over" v-if="scatter_state")
           circle(:cx="node.x" :cy="node.y" :r="node.r" :fill="(!content_disable && !node.selected) ? '#f4f4f4' : content_color" :fill-opacity="(!content_disable && !node.selected) ? 1 : 0.7").node-circle
         template(v-for="node in node_under" v-if="scatter_state")
-          circle(:cx="node.x" :cy="node.y" :r="node.r" :fill="(!content_disable && !node.selected) ? '#f4f4f4' : content_color" :fill-opacity="(!content_disable && !node.selected) ? 1 : 0.4").node-circle
+          circle(:cx="node.x" :cy="node.y" :r="node.r" :fill="(!content_disable && !node.selected) ? '#f4f4f4' : content_color" :fill-opacity="(!content_disable && !node.selected) ? 1 : 0.35").node-circle
         template(v-for="node in node_over" v-if="!scatter_state")
-          rect(:x="node.x" y="calc(50% - 53px)" width="2.5px" height="50px" :fill="(!content_disable && !node.selected) ? '#f4f4f4' : content_color" fill-opacity="0.01")
+          rect(:x="node.x - 2.5" y="calc(50% - 53px)" width="2.5" height="50" :fill="(!content_disable && !node.selected) ? '#f4f4f4' : content_color" fill-opacity="0.01")
         template(v-for="node in node_under" v-if="!scatter_state")
-          rect(:x="node.x" y="calc(50% + 3px)" width="2.5px" height="50px" :fill="(!content_disable && !node.selected) ? '#f4f4f4' : content_color" fill-opacity="0.01")
-        rect(x="15px" y="calc(50% - 3px)" width="calc(100% - 30px)" height="6px" :fill="content_color" fill-opacity="0.2")
-
+          rect(:x="node.x - 2.5" y="calc(50% + 3px)" width="2.5" height="50" :fill="(!content_disable && !node.selected) ? '#f4f4f4' : content_color" fill-opacity="0.01")
+        rect(x="0" y="calc(50% - 2px)" width="100%" height="4" :fill="content_color" fill-opacity="0.2")
 </template>
 
 <script>
@@ -77,7 +76,7 @@ export default {
       type: Boolean,
       required: false
     }
-  }
+  },
 };
 </script>
 
@@ -85,8 +84,8 @@ export default {
 .display-content-container
   width: 100%
   height: 180px
+  margin: 12px 0
   display: flex
-  border-bottom: 1px solid #dedede
   line-height: 180px
   background: #FFFFFF
   transition: 0.2s
@@ -96,6 +95,7 @@ export default {
   .display-content-category
     width: 120px
     height: 100%
+    font-size: 12px
   .display-content-count-wrapper
     width: 90px
     height: 100%
@@ -122,7 +122,6 @@ export default {
           right: 0
           bottom: 0
           font-size: 12px
-
   .display-content-graph-container
     flex: 1
     height: 100%
