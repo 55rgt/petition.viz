@@ -1,24 +1,24 @@
 <template lang="pug">
   .display-content-container(v-if="visibility" :style="{border: `0.5px solid rgba(${parseInt(content_color.substring(1,3),16)},${parseInt(content_color.substring(3,5),16)},${parseInt(content_color.substring(5,7),16)}, 0.2)`}")
-    .display-content-category.disable-select(:style="{background: `rgba(${parseInt(content_color.substring(1,3),16)},${parseInt(content_color.substring(3,5),16)},${parseInt(content_color.substring(5,7),16)}, 0.2)`}") {{ content_category }}
+    .display-content-category.disable-select(@click="getDetail" :style="{background: `rgba(${parseInt(content_color.substring(1,3),16)},${parseInt(content_color.substring(3,5),16)},${parseInt(content_color.substring(5,7),16)}, 0.2)`}") {{ content_category }}
     .display-content-count-wrapper(:style="{borderRight: `1px solid rgba(${parseInt(content_color.substring(1,3),16)},${parseInt(content_color.substring(3,5),16)},${parseInt(content_color.substring(5,7),16)}, 0.2)`}")
-      .display-content-count-container
+      .display-content-count-container.disable-select
         .display-content-count {{ count_over }}
-        .display-content-threshold.disable-select 1K
-          i.display-content-count-sign-over.material-icons.disable-select arrow_upward
-          i.display-content-count-sign-under.material-icons.disable-select arrow_downward
+        .display-content-threshold 1K
+          i.display-content-count-sign-over.material-icons arrow_upward
+          i.display-content-count-sign-under.material-icons arrow_downward
         .display-content-count {{ count_under }}
     .display-content-graph-container
       svg(width="100%" height="100%").svg-test
-        template(v-for="node in node_over" v-if="scatter_state")
-          circle(:cx="node.x" :cy="node.y" :r="node.r" :fill="(!content_disable && !node.selected) ? '#f4f4f4' : content_color" :fill-opacity="(!content_disable && !node.selected) ? 1 : 0.7").node-circle
-        template(v-for="node in node_under" v-if="scatter_state")
-          circle(:cx="node.x" :cy="node.y" :r="node.r" :fill="(!content_disable && !node.selected) ? '#f4f4f4' : content_color" :fill-opacity="(!content_disable && !node.selected) ? 1 : 0.35").node-circle
-        template(v-for="node in node_over" v-if="!scatter_state")
-          rect(:x="node.x - 2.5" y="calc(50% - 53px)" width="2.5" height="50" :fill="(!content_disable && !node.selected) ? '#f4f4f4' : content_color" fill-opacity="0.01")
-        template(v-for="node in node_under" v-if="!scatter_state")
-          rect(:x="node.x - 2.5" y="calc(50% + 3px)" width="2.5" height="50" :fill="(!content_disable && !node.selected) ? '#f4f4f4' : content_color" fill-opacity="0.01")
         rect(x="0" y="calc(50% - 2px)" width="100%" height="4" :fill="content_color" fill-opacity="0.2")
+        template(v-for="node in node_over" v-if="scatter_state")
+          circle(:cx="node.x" :cy="node.y" :r="node.r" :fill="(!content_disable && !node.selected) ? '#f7f7f7' : content_color" :fill-opacity="(!content_disable && !node.selected) ? 1 : 0.6").node-circle
+        template(v-for="node in node_under" v-if="scatter_state")
+          circle(:cx="node.x" :cy="node.y" :r="node.r" :fill="(!content_disable && !node.selected) ? '#f7f7f7' : content_color" :fill-opacity="(!content_disable && !node.selected) ? 1 : 0.25").node-circle
+        template(v-for="node in node_over" v-if="!scatter_state")
+          rect(:x="node.x - 0.5 * (898 - 6)/364" y="calc(50% - 89px - 2px)" :width="(898 - 6)/364" height="89" :fill="(!content_disable && !node.selected) ? '#f7f7f7' : content_color" fill-opacity="0.02")
+        template(v-for="node in node_under" v-if="!scatter_state")
+          rect(:x="node.x - 0.5 * (898 - 6)/364" y="calc(50% + 2px)" :width="(898 - 6)/364" height="89" :fill="(!content_disable && !node.selected) ? '#f7f7f7' : content_color" fill-opacity="0.02")
 </template>
 
 <script>
@@ -28,8 +28,8 @@ export default {
   data() {
     return {
       underNodeList: [],
-      overNodeList: [],
-    }
+      overNodeList: []
+    };
   },
   props: {
     content_disable: {
@@ -77,6 +77,13 @@ export default {
       required: false
     }
   },
+  methods: {
+    getDetail() {
+      let that = this;
+      console.log("getDetail");
+      that.$emit('getDetail', that.content_idx);
+    }
+  }
 };
 </script>
 
@@ -86,7 +93,6 @@ export default {
   height: 180px
   margin: 12px 0
   display: flex
-  line-height: 180px
   background: #FFFFFF
   transition: 0.2s
   &:hover
@@ -95,7 +101,9 @@ export default {
   .display-content-category
     width: 120px
     height: 100%
-    font-size: 12px
+    line-height: 180px
+    overflow-y: hidden
+    font-size: 10px
   .display-content-count-wrapper
     width: 90px
     height: 100%
@@ -133,9 +141,9 @@ export default {
       top: calc(50% - 6px)
       border: 0.3px solid #cdcdcd
 
-
 .b
   border: 1px solid black
+
 .disable-select
   -webkit-user-select: none
   -moz-user-select: none

@@ -1,8 +1,9 @@
 <template lang="pug">
-  .main-container
-    .header
-      .topic-title.disable-select Korean Petition Insights
-      .topic-detail.disable-select - Did the government listen to the citizens' voices well?
+  .main-container.b
+    .header.disable-select
+      .topic-title Korean Petition Insights
+      .topic-detail - Did the government listen to the citizens' voices well?
+      .topic-resolution ( This Visualization Is Designed For Resolution 1920px × 1080px. )
     .body
       .nav-container
         .accordion-bar.disable-select(@click='expand("expandQuery")') Query
@@ -66,11 +67,14 @@
         .display-content-list-container
           display_component(v-for="displayComponent in component.displayComponentList" v-bind="displayComponent")
       .vertical-line
-      .detail-container
-        .display-filter-state-container
-        .display-category-info-container.b
-        .display-keyword-info-list-container.b
-        .display-related-post-list-container.b
+      .detail-container.disable-select
+        .display-detail-header
+        .display-top-keyword-wrapper
+          .display-top-keyword-title.b Top 10 Keywords
+          .display-top-keyword-list-container.b
+        .display-post-wrapper
+          .display-post-title.b Posts
+          .display-post-list-container.b
 </template>
 
 <script>
@@ -95,14 +99,12 @@ export default {
   name: 'MainPage',
   data() {
     return {
-
       // 1에서 시작 ~ 898에서 끝
-
       controller: {
         width: 12,
         height: 30,
         minCx: 7,
-        maxCx: 892
+        maxCx: 890
       },
       expandCategory: false,
       expandOption: false,
@@ -125,6 +127,9 @@ export default {
       nodeUnderList: []
     };
   },
+  mounted() {
+    let that = this;
+  },
   created() {
     let that = this;
     that.expandCategory = false;
@@ -143,7 +148,7 @@ export default {
         return (ele.category === i && ele.count < THRESHOLD);
       });
       _.forEach(under, (ele) => {
-        ele['x'] = 15 + ele['dayIndex'] * 2.5;
+        ele['x'] = 6 + ele['dayIndex'] * (898 - 6) / 364;
         ele['y'] = Math.floor(75 * Math.random()) + 95;
         ele['r'] = Math.floor(2 * Math.random()) + 1;
         ele['selected'] = true;
@@ -153,7 +158,7 @@ export default {
         return (ele.category === i && ele.count >= THRESHOLD);
       });
       _.forEach(over, (ele) => {
-        ele['x'] = 15 + ele['dayIndex'] * 2.5;
+        ele['x'] = 6 + ele['dayIndex'] * (898 - 6) / 364;
         ele['y'] = Math.floor(70 * Math.random()) + 10;
         ele['r'] = Math.floor(4 * Math.random()) + 3;
         ele['selected'] = true;
@@ -319,7 +324,7 @@ export default {
   .header
     width: 100%
     height: 72px
-    padding: 12px 12px 12px 24px
+    padding: 12px 24px
     display: flex
     box-shadow: 0 1px 10px 0 rgba(102, 102, 102, 1)
     background: #202123
@@ -333,13 +338,22 @@ export default {
       font-family: 'Playfair Display', serif
     .topic-detail
       width: auto
-      height: 24px
+      height: 100%
       padding-left: 12px
       line-height: 52px
       font-size: 16px
       font-weight: 400
       font-family: 'Source Sans Pro', sans-serif
       color: #ffffff
+    .topic-resolution
+      flex: 1
+      line-height: 52px
+      font-size: 12px
+      font-weight: 400
+      font-style: italic
+      font-family: 'Source Sans Pro', sans-serif
+      color: #ffffff
+      text-align: right
   .body
     width: 100%
     height: calc(100% - 72px)
@@ -486,7 +500,7 @@ export default {
             height: 100%
             line-height: 81px
             font-size: 10px
-            border: 0.3px solid #757575
+            border: 0.3px solid #b8b8b8
           .display-header-category-info
             flex: 1
             padding-left: 12px
@@ -520,19 +534,43 @@ export default {
     .detail-container
       width: 450px
       height: 100%
-      .display-filter-state-container
+      .display-detail-header
         width: 100%
-        height: 60px
-      .display-category-info-container
+        height: 36px
+        padding: 0 24px
+        text-align: left
+        line-height: 60px
+        font-size: 24px
+        color: #606368
+      .display-top-keyword-wrapper
         width: 100%
-        height: 288px
-      .display-keyword-info-list-container
+        height: 510px
+        padding: 12px 24px
+        .display-top-keyword-title
+          width: 100%
+          height: 36px
+          text-align: left
+          line-height: 36px
+          color: #606368
+          font-size: 20px
+        .display-top-keyword-list-container
+          width: 100%
+          height: calc(100% - 36px)
+      .display-post-wrapper
         width: 100%
-        height: 360px
-      .display-related-post-list-container
-        width: 100%
-        height: 300px
-
+        height: 462px
+        padding: 24px
+        .display-post-title
+          width: 100%
+          height: 36px
+          text-align: left
+          line-height: 36px
+          color: #606368
+          font-size: 20px
+        .display-post-list-container
+          width: 100%
+          height: calc(100% - 36px)
+          overflow-y: scroll
 .b
   border: 1px solid black
 
