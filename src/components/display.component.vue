@@ -12,23 +12,57 @@
       svg(width="100%" height="100%").svg-test
         rect(x="0" y="calc(50% - 2px)" width="100%" height="4" :fill="content_color" fill-opacity="0.2")
         template(v-for="node in node_over" v-if="scatter_state")
-          circle(:cx="node.x" :cy="node.y" :r="node.r" :fill="(!content_disable && !node.selected) ? '#f7f7f7' : content_color" :fill-opacity="(!content_disable && !node.selected) ? 1 : 0.6").node-circle
+          circle(:cx="node.x" :cy="node.y" :r="node.r"
+          :fill="(!content_disable && !node.selected) ? '#f7f7f7' : content_color"
+          :fill-opacity="(!content_disable && !node.selected) ? 1 : 0.6"
+          @mouseover="overCircle(node)" @mouseleave="leaveCircle()").node-circle
         template(v-for="node in node_under" v-if="scatter_state")
-          circle(:cx="node.x" :cy="node.y" :r="node.r" :fill="(!content_disable && !node.selected) ? '#f7f7f7' : content_color" :fill-opacity="(!content_disable && !node.selected) ? 1 : 0.25").node-circle
+          circle(:cx="node.x" :cy="node.y" :r="node.r"
+          :fill="(!content_disable && !node.selected) ? '#f7f7f7' : content_color"
+          :fill-opacity="(!content_disable && !node.selected) ? 1 : 0.25"
+          @mouseover="overCircle(node)" @mouseleave="leaveCircle()").node-circle
         template(v-for="node in node_over" v-if="!scatter_state")
-          rect(:x="node.x - 0.5 * (898 - 6)/364" y="calc(50% - 89px - 2px)" :width="(898 - 6)/364" height="89" :fill="(!content_disable && !node.selected) ? '#f7f7f7' : content_color" fill-opacity="0.02")
+          rect(:x="node.x - 0.5 * (898 - 6)/364" y="calc(50% - 89px - 2px)" :width="(898 - 6)/364" height="89"
+          :fill="(!content_disable && !node.selected) ? '#f7f7f7' : content_color" fill-opacity="0.02"
+          @mouseover="overRect(node)" @mouseleave="leaveRect()")
         template(v-for="node in node_under" v-if="!scatter_state")
-          rect(:x="node.x - 0.5 * (898 - 6)/364" y="calc(50% + 2px)" :width="(898 - 6)/364" height="89" :fill="(!content_disable && !node.selected) ? '#f7f7f7' : content_color" fill-opacity="0.02")
+          rect(:x="node.x - 0.5 * (898 - 6)/364" y="calc(50% + 2px)" :width="(898 - 6)/364" height="89"
+          :fill="(!content_disable && !node.selected) ? '#f7f7f7' : content_color" fill-opacity="0.02"
+          @mouseover="overRect(node)" @mouseleave="leaveRect()")
+      transition(name="fade")
+        .tooltip-box(v-if="scatter_state && tooltipState && (hoveredCircle.selected || content_disable)"
+        :style="{borderRadius: '5px 5px 0 5px', pointerEvents: 'none', width: `${tooltipWidth}px`, height:`${tooltipHeight}px`, background: content_color, position: 'absolute', top: `${hoveredCircle.y - tooltipHeight - tooltipMargin}px`, left: `${hoveredCircle.x - tooltipWidth - tooltipMargin}px` }")
+          .tooltip-wrapper
+            .tooltip-title Title: {{ hoveredCircle.title }}
+            .tooltip-agree Agree: {{ hoveredCircle.count }}
+            .tooltip-period Period: {{ hoveredCircle.dayIndex }}
+        .rect-box(v-if="!scatter_state && rectState"
+        :style="{borderRadius: '5px 5px 0 5px', pointerEvents: 'none', width: `${rectWidth}px`, height:`${rectHeight}px`, background: content_color, position: 'absolute', top: `${rectBoxPosY - rectHeight}px`, left: `${hoveredRect.x - rectWidth - tooltipMargin}px` }")
+
 </template>
 
 <script>
+
+import _ from 'lodash';
 
 export default {
   name: 'display_component',
   data() {
     return {
-      underNodeList: [],
-      overNodeList: []
+      tooltipWidth: 240,
+      tooltipHeight: 90,
+      tooltipMargin: 5,
+      rectWidth: 180,
+      rectHeight: 100,
+      rectBoxPosY: null,
+      hoveredCircle: null,
+      hoveredRect: null,
+      tooltipState: false,
+      rectState: false,
+      selectedRectList: [],
+      rectStartDay: null,
+      sumOfAgree: null,
+      numOfPosts: null,
     };
   },
   props: {
@@ -78,10 +112,84 @@ export default {
     }
   },
   methods: {
+    overRect: function (node) {
+      let that = this;
+      let filtered;
+      that.rectState = true;
+      that.hoveredRect = node;
+      that.rectBoxPosY = event.clientY - 225;
+      if(node.count < that.content_threshold) {
+        that.content_disable ?
+          filtered = that.node_under :
+          filtered = _.filter(that.node_under, (ele) => { return ele.selected === true; });
+      }
+      else {
+        that.content_disable ?
+          filtered = that.node_over :
+          filtered = _.filter(that.node_over, (ele) => { return ele.selected === true; });
+      }
+      that.sumOfAgree = _.sumBy(filtered, 'count');
+      that.rectStartDay = node.dayIndex;
+      that.numOfPosts = filtered.length;
+
+    },
+    leaveRect: function () {
+      let that = this;
+      that.rectState = false;
+      that.hoveredRect = null;
+      that.selectedRectList = [];
+
+    },
+    overCircle: function (node) {
+      let that = this;
+      that.hoveredCircle = node;
+      that.tooltipState = true;
+      console.log(that.hoveredCircle);
+    },
+    leaveCircle: function () {
+      let that = this;
+      that.hoveredCircle = null;
+      that.tooltipState = false;
+      console.log('leave');
+    },
     getDetail() {
       let that = this;
-      console.log("getDetail");
-      that.$emit('getDetail', that.content_idx);
+      let overDict = {};
+      let underDict = {};
+      let overArr = [];
+      let underArr = [];
+
+      _.forEach(_.filter(that.node_over, (ele) => {
+        return ele.selected;
+      }), (single) => {
+        _.forEach(single.keywords, (keyword) => {
+          _.isNil(overDict[keyword]) ? overDict[keyword] = 1 : overDict[keyword] += 1;
+        });
+      });
+      _.forEach(overDict, (value, key) => {
+        overArr.push({ key, value });
+      });
+
+      overArr = _.slice(_.orderBy(overArr, ['value'], ['desc']), 0, 10);
+
+      _.forEach(_.filter(that.node_under, (ele) => {
+        return ele.selected;
+      }), (single) => {
+        _.forEach(single.keywords, (keyword) => {
+          _.isNil(underDict[keyword]) ? underDict[keyword] = 1 : underDict[keyword] += 1;
+        });
+      });
+
+      _.forEach(underDict, (value, key) => {
+        underArr.push({ key, value });
+      });
+
+      underArr = _.slice(_.orderBy(underArr, ['value'], ['desc']), 0, 10);
+      let sortedWhole = _.orderBy(_.union(that.node_over, that.node_under), ['count'], ['desc']);
+      if(!that.content_disable) sortedWhole = _.filter(sortedWhole, (ele) => {
+        return ele.selected;
+      });
+      that.$emit('getDetail', that.content_idx, overArr, underArr, sortedWhole);
     }
   }
 };
@@ -95,6 +203,7 @@ export default {
   display: flex
   background: #FFFFFF
   transition: 0.2s
+  cursor: pointer
   &:hover
     background: rgba(190, 190, 190, 0.22)
     transition: 0.2s
@@ -134,12 +243,42 @@ export default {
     flex: 1
     height: 100%
     position: relative
-    .display-content-date-bar
-      width: 100%
-      height: 12px
-      position: absolute
-      top: calc(50% - 6px)
-      border: 0.3px solid #cdcdcd
+    .tooltip-box
+      padding: 6px
+      .tooltip-wrapper
+        width: 100%
+        height: 100%
+        overflow: hidden
+        text-overflow: ellipsis
+        white-space: nowrap
+      .tooltip-title
+        width: 100%
+        height: 28px
+        line-height: 28px
+        font-size: 10px
+        text-align: left
+      .tooltip-agree
+        width: 100%
+        height: 25px
+        line-height: 25px
+        font-size: 10px
+        text-align: left
+      .tooltip-period
+        width: 100%
+        height: 25px
+        line-height: 25px
+        font-size: 10px
+        text-align: left
+
+.node-circle
+  &:hover
+    border: 1px solid black
+
+.fade-enter-active, .fade-leave-active
+  transition: opacity .5s
+
+.fade-enter, .fade-leave-to
+  opacity: 0
 
 .b
   border: 1px solid black
@@ -149,6 +288,7 @@ export default {
   -moz-user-select: none
   -ms-user-select: none
   user-select: none
+
 
 </style>
 
